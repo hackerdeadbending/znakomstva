@@ -70,6 +70,8 @@ function ageFromDate(value) {
 
 app.use('/api', requireConfig);
 
+app.get('/api/whoami', auth, (req, res) => res.json({ telegramUserId: req.telegramUser.id, isAdmin: ADMIN_IDS.has(req.telegramUser.id) }));
+
 app.get('/api/me', auth, asyncRoute(async (req, res) => {
   const result = await pool.query('select id, display_name, birth_date, bio, city, interests, is_visible, is_verified, created_at, updated_at from profiles where telegram_user_id = $1', [req.telegramUser.id]);
   res.json({ profile: result.rows[0] || null });
