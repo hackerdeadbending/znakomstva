@@ -74,6 +74,41 @@ app.put('/api/me', auth, asyncRoute(async (req, res) => {
   res.json({ profile: result.rows[0] });
 }));
 
+app.get('/api/likes/incoming', auth, asyncRoute(async (req, res) => {
+  const me = await pool.query('select id from profiles where telegram_user_id=$1', [req.telegramUser.id]);
+  if (!me.rowCount) return res.status(409).json({ error: 'profile_required' });
+  const result = await pool.query(
+    `select p.id, p.display_name, extract(year from age(current_date, p.birth_date))::int as age,
+       p.bio, p.city, p.interests, p.is_verified,
+       (select storage_key from profile_photos ph where ph.profile_id=p.id and ph.moderation_status='approved' order by ph.position limit 1) as photo_key,
+       l.created_at as liked_at
+     from likes l join profiles p on p.id=l.from_profile_id
+     where l.to_profile_id=$1 and p.is_visible=true
+       and not exists (select 1 from blocks b where (b.blocker_profile_id=$1 and b.blocked_profile_id=p.id) or (b.blocker_profile_id=p.id and b.blocked_profile_id=$1))
+     order by l.created_at desc limit 100`,
+    [me.rows[0].id]
+  );
+  res.json({ profiles: result.rows });
+}));
+
+app.get('/api/matches', auth, asyncRoute(async (req, res) => {
+  const me = await pool.query('select id from profiles where telegram_user_id=$1', [req.telegramUser.id]);
+  if (!me.rowCount) return res.status(409).json({ error: 'profile_required' });
+  const result = await pool.query(
+    `select m.id as match_id, m.created_at as matched_at,
+       p.id, p.display_name, extract(year from age(current_date, p.birth_date))::int as age,
+       p.bio, p.city, p.interests, p.is_verified,
+       (select storage_key from profile_photos ph where ph.profile_id=p.id and ph.moderation_status='approved' order by ph.position limit 1) as photo_key
+     from matches m
+     join profiles p on p.id = case when m.profile_a_id=$1 then m.profile_b_id else m.profile_a_id end
+     where (m.profile_a_id=$1 or m.profile_b_id=$1) and p.is_visible=true
+       and not exists (select 1 from blocks b where (b.blocker_profile_id=$1 and b.blocked_profile_id=p.id) or (b.blocker_profile_id=p.id and b.blocked_profile_id=$1))
+     order by m.created_at desc limit 100`,
+    [me.rows[0].id]
+  );
+  res.json({ matches: result.rows });
+}));
+
 app.get('/api/discovery', auth, asyncRoute(async (req, res) => {
   const me = await pool.query('select id from profiles where telegram_user_id=$1', [req.telegramUser.id]);
   if (!me.rowCount) return res.status(409).json({ error: 'profile_required' });
