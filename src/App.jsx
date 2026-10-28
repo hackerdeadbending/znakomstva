@@ -15,7 +15,7 @@ const people = [
 const photo = (id, w = 900) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
 
 function Brand() {
-  return <div className="brand"><span className="brand-mark"><Heart size={17} fill="currentColor" strokeWidth={2.2}/></span><span>znakomstva<span className="brand-dot">.</span></span></div>;
+  return <div className="brand"><span className="brand-mark"><Heart size={17} fill="currentColor" strokeWidth={2.2}/></span><span>AMORI<span className="brand-dot">.</span></span></div>;
 }
 
 function ProfileCard({ person, onLike, onPass, index }) {
@@ -94,7 +94,7 @@ export default function App() {
 
       {tab === 'premium' && <><section className="page-heading"><div className="eyebrow gold-text"><Crown size={13}/> ZNAKOMSTVA PLUS</div><h1>Больше искр.<br/><span>Меньше границ.</span></h1><p className="subtitle">Дополнительные возможности для твоих знакомств.</p></section><div className="premium-card"><div className="premium-glow"/><div className="crown-large"><Crown size={30}/></div><h2>Твоя история.<br/>Твои правила.</h2><p>Premium-функции появятся после подключения безопасной оплаты.</p><div className="premium-benefits"><span><Check size={16}/> Смотреть, кому ты понравился</span><span><Check size={16}/> Дополнительные суперлайки</span><span><Check size={16}/> Расширенные фильтры</span></div><button className="primary-button" onClick={() => alert('Premium пока в разработке. Оплата не подключена.')}>Скоро появится <Sparkles size={16}/></button><small>Никаких списаний — оплата пока отключена.</small></div></>}
 
-      <footer className="footer-note">Сделано для настоящих встреч <Heart size={12} fill="currentColor"/></footer>
+      <footer className="footer-note">AMORI — ближе к настоящим встречам <Heart size={12} fill="currentColor"/></footer>
     </main>
 
     <nav className="bottom-nav">
