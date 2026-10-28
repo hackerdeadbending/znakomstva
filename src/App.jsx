@@ -46,7 +46,6 @@ function EmptyState({ title, body, icon: Icon }) {
   return <div className="empty-state"><div className="empty-icon"><Icon size={28}/></div><h3>{title}</h3><p>{body}</p></div>;
 }
 
-import { useEffect, useState } from 'react';
 export default function App() {
  const [tab,setTab]=useState('discover');
  const [profile,setProfile]=useState(null);
