@@ -45,67 +45,59 @@ function EmptyState({ title, body, icon: Icon }) {
   return <div className="empty-state"><div className="empty-icon"><Icon size={28}/></div><h3>{title}</h3><p>{body}</p></div>;
 }
 
+import { useEffect, useState } from 'react';
+import { apiClient, ApiError } from './lib/api.js';
+
 export default function App() {
-  const [tab, setTab] = useState('discover');
-  const [index, setIndex] = useState(0);
-  const [liked, setLiked] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showMatch, setShowMatch] = useState(null);
-  const [distance, setDistance] = useState(25);
-  const [age, setAge] = useState('20–30');
-  const [profileMode, setProfileMode] = useState(false);
-  const visiblePeople = useMemo(() => { const [minAge, maxAge] = age.split('–').map(Number); return people.filter(p => p.age >= minAge && p.age <= maxAge && p.km <= distance); }, [age, distance]);
-  const current = visiblePeople[index % Math.max(visiblePeople.length, 1)];
-  const incomingLikes = useMemo(() => people.filter(p => liked.includes(p.id)).reverse(), [liked]);
-
-  const next = (isLike) => {
-    if (isLike && current) {
-      setLiked(prev => prev.includes(current.id) ? prev : [...prev, current.id]);
-      // Demo-only match feedback. Production matching must come from the backend.
-      if (current.id === 2 || current.id === 4) setShowMatch(current);
-    }
-    setIndex(prev => prev + 1);
-  };
-  const goTab = (value) => { setTab(value); setProfileMode(value === 'profile'); };
-
-  return <div className="app-shell">
-    <div className="ambient ambient-one"/><div className="ambient ambient-two"/>
-    <header className="topbar">
-      <Brand />
-      <div className="top-actions"><button className="premium-pill" onClick={() => setTab('premium')}><Crown size={14} fill="currentColor"/> Premium</button><button className="avatar-mini" onClick={() => goTab('profile')}><img src={photo('photo-1534528741775-53994a69daeb', 100)} alt="Профиль"/></button></div>
-    </header>
-
-    <main className="main-content">
-      {tab === 'discover' && <>
-        <section className="welcome-row"><div><div className="eyebrow"><Sparkles size={13}/> ТВОЯ ИСТОРИЯ НАЧИНАЕТСЯ ЗДЕСЬ</div><h1>Искра может<br/><span>быть рядом.</span></h1><p className="subtitle">Знакомься с теми, кто тебе по-настоящему близок.</p></div><button className="filter-button" onClick={() => setShowFilters(true)}><SlidersHorizontal size={18}/></button></section>
-        <div className="discovery-meta"><div className="people-count"><span className="pulse-dot"/> <strong>24</strong> человека рядом</div><button className="sort-button" onClick={() => setShowFilters(true)}><Compass size={14}/> Для тебя <ChevronRight size={14}/></button></div>
-        <section className="deck-wrap">
-          <AnimatePresence mode="wait">{index < visiblePeople.length ? <ProfileCard key={current.id} person={current} onLike={() => next(true)} onPass={() => next(false)} index={index}/> : <div className="finished-card"><div className="finished-orb"><Heart size={28}/></div><h2>Пока всё на сегодня</h2><p>Ты посмотрел(а) все анкеты поблизости. Загляни чуть позже — новые люди уже в пути.</p><button className="primary-button" onClick={() => setIndex(0)}>Посмотреть ещё раз <Sparkles size={16}/></button></div>}</AnimatePresence>
-        </section>
-        <div className="swipe-hint"><span>← Пропустить</span><span>Нравится →</span></div>
-        <section className="trust-note"><ShieldCheck size={16}/><span>Твоё личное пространство — под твоим контролем.</span><ChevronRight size={15}/></section>
-      </>}
-
-      {tab === 'likes' && <><section className="page-heading"><div className="eyebrow"><Heart size={13}/> СИМПАТИИ</div><h1>Кому ты<br/><span>понравился.</span></h1><p className="subtitle">Взаимность начинается с маленького шага.</p></section>{incomingLikes.length ? <div className="likes-grid">{incomingLikes.map(p => <button className="like-tile" key={p.id} onClick={() => setShowMatch(p)}><img src={photo(p.photo, 400)} alt={p.name}/><span className="tile-gradient"/><span className="tile-name">{p.name}, {p.age}</span><span className="tile-heart"><Heart size={14} fill="currentColor"/></span></button>)}</div> : <EmptyState icon={Heart} title="Здесь будет взаимность" body="Ставь лайки анкетам, которые тебе понравились. Все твои симпатии будут собраны здесь."/>}</>}
-
-      {tab === 'matches' && <><section className="page-heading"><div className="eyebrow"><Sparkles size={13}/> СОВПАДЕНИЯ</div><h1>Это уже<br/><span>что-то особенное.</span></h1><p className="subtitle">Когда симпатия взаимна — всё только начинается.</p></section>{liked.some(id => id === 2 || id === 4) ? <div className="match-list">{people.filter(p => liked.includes(p.id) && (p.id === 2 || p.id === 4)).map(p => <button className="match-row" key={p.id} onClick={() => setShowMatch(p)}><img src={photo(p.photo, 200)} alt={p.name}/><div><strong>{p.name}, {p.age}</strong><span>Вы понравились друг другу ✨</span></div><span className="chat-arrow"><MessageCircle size={18}/></span></button>)}</div> : <EmptyState icon={MessageCircle} title="Тут начнутся ваши истории" body="Когда симпатии совпадут, вы увидите друг друга здесь и сможете начать общение."/>}</>}
-
-      {tab === 'profile' && <><section className="page-heading"><div className="eyebrow"><UserRound size={13}/> ТВОЁ ПРОСТРАНСТВО</div><h1>Покажи себя<br/><span>настоящего.</span></h1></section><div className="own-profile"><div className="own-photo"><img src={photo('photo-1534528741775-53994a69daeb')} alt="Твоё фото"/><button><Camera size={17}/></button></div><div className="own-details"><h2>Твой профиль <span className="draft-badge">ДЕМО</span></h2><p>Добавь фото, расскажи о себе и укажи интересы — пусть знакомство начнётся с тебя.</p><button className="primary-button" onClick={() => setShowFilters(true)}>Настроить анкету <ChevronRight size={16}/></button></div></div><div className="settings-list"><button onClick={() => setShowFilters(true)}><span className="settings-icon"><Settings2 size={18}/></span><span><strong>Предпочтения</strong><small>Кого хочешь встретить</small></span><ChevronRight size={17}/></button><button><span className="settings-icon"><ShieldCheck size={18}/></span><span><strong>Приватность и безопасность</strong><small>Контроль над своим профилем</small></span><ChevronRight size={17}/></button><button onClick={() => setTab('premium')}><span className="settings-icon gold"><Crown size={18}/></span><span><strong>Znakomstva Premium</strong><small>Больше возможностей для знакомств</small></span><ChevronRight size={17}/></button></div></>}
-
-      {tab === 'premium' && <><section className="page-heading"><div className="eyebrow gold-text"><Crown size={13}/> ZNAKOMSTVA PLUS</div><h1>Больше искр.<br/><span>Меньше границ.</span></h1><p className="subtitle">Дополнительные возможности для твоих знакомств.</p></section><div className="premium-card"><div className="premium-glow"/><div className="crown-large"><Crown size={30}/></div><h2>Твоя история.<br/>Твои правила.</h2><p>Premium-функции появятся после подключения безопасной оплаты.</p><div className="premium-benefits"><span><Check size={16}/> Смотреть, кому ты понравился</span><span><Check size={16}/> Дополнительные суперлайки</span><span><Check size={16}/> Расширенные фильтры</span></div><button className="primary-button" onClick={() => alert('Premium пока в разработке. Оплата не подключена.')}>Скоро появится <Sparkles size={16}/></button><small>Никаких списаний — оплата пока отключена.</small></div></>}
-
-      <footer className="footer-note">AMORI — ближе к настоящим встречам <Heart size={12} fill="currentColor"/></footer>
-    </main>
-
-    <nav className="bottom-nav">
-      <button className={tab === 'discover' ? 'nav-item active' : 'nav-item'} onClick={() => goTab('discover')}><Compass size={21}/><span>Поиск</span></button>
-      <button className={tab === 'likes' ? 'nav-item active' : 'nav-item'} onClick={() => goTab('likes')}><Heart size={21}/><span>Лайки</span>{liked.length > 0 && <i className="nav-badge">{liked.length}</i>}</button>
-      <button className={tab === 'matches' ? 'nav-item active' : 'nav-item'} onClick={() => goTab('matches')}><MessageCircle size={21}/><span>Чаты</span></button>
-      <button className={tab === 'profile' ? 'nav-item active' : 'nav-item'} onClick={() => goTab('profile')}><UserRound size={21}/><span>Профиль</span></button>
-    </nav>
-
-    <AnimatePresence>{showFilters && <motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setShowFilters(false)}><motion.div className="filter-sheet" initial={{y:50}} animate={{y:0}} exit={{y:50}} onClick={e => e.stopPropagation()}><div className="sheet-handle"/><div className="sheet-heading"><div><span className="eyebrow">НАСТРОЙКИ</span><h2>Твои предпочтения</h2></div><button className="close-button" onClick={() => setShowFilters(false)}><X size={19}/></button></div><label className="field-label">Возраст</label><div className="age-options">{['18–24','20–30','25–35','30–45'].map(v => <button key={v} className={age === v ? 'age-option selected' : 'age-option'} onClick={() => setAge(v)}>{v}</button>)}</div><div className="range-heading"><label className="field-label">Расстояние</label><strong>до {distance} км</strong></div><input className="range" type="range" min="1" max="100" value={distance} onChange={e => setDistance(Number(e.target.value))}/><div className="range-labels"><span>Рядом</span><span>100 км</span></div><div className="privacy-callout"><ShieldCheck size={19}/><span>Точные координаты не показываются другим пользователям.</span></div><button className="primary-button full-width" onClick={() => { setIndex(0); setShowFilters(false); }}>Показать анкеты <Sparkles size={16}/></button></motion.div></motion.div>}</AnimatePresence>
-
-    <AnimatePresence>{showMatch && <motion.div className="modal-backdrop match-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={() => setShowMatch(null)}><motion.div className="match-modal" initial={{scale:.88,y:18}} animate={{scale:1,y:0}} exit={{scale:.92}} onClick={e => e.stopPropagation()}><button className="match-close" onClick={() => setShowMatch(null)}><X size={18}/></button><div className="match-sparkles"><Sparkles/><Heart fill="currentColor"/><Sparkles/></div><div className="match-photos"><img src={photo('photo-1534528741775-53994a69daeb',300)} alt="Ты"/><span><Heart size={18} fill="currentColor"/></span><img src={photo(showMatch.photo,300)} alt={showMatch.name}/></div><div className="eyebrow centered">ЭТО ВЗАИМНО</div><h2>Есть искра! <span>✨</span></h2><p>Вы с {showMatch.name} понравились друг другу. Самое время сказать привет.</p><button className="primary-button full-width" onClick={() => {setShowMatch(null);setTab('matches')}}><MessageCircle size={17}/> Перейти к совпадениям</button><button className="text-button" onClick={() => setShowMatch(null)}>Продолжить знакомиться</button><small className="demo-disclaimer">Демонстрационный экран · реальный матчинг подключим к серверу</small></motion.div></motion.div>}</AnimatePresence>
-  </div>;
+ const [tab,setTab]=useState('discover');
+ const [profile,setProfile]=useState(null);
+ const [people,setPeople]=useState([]);
+ const [likes,setLikes]=useState([]);
+ const [matches,setMatches]=useState([]);
+ const [index,setIndex]=useState(0);
+ const [loading,setLoading]=useState(true);
+ const [busy,setBusy]=useState(false);
+ const [error,setError]=useState('');
+ const [editing,setEditing]=useState(false);
+ const [showFilters,setShowFilters]=useState(false);
+ const [showMatch,setShowMatch]=useState(null);
+ const [age,setAge]=useState('18–99');
+ const [distance,setDistance]=useState(25);
+ const [form,setForm]=useState({displayName:'',birthDate:'',bio:'',city:'',interests:''});
+ const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
+ const avatar=(name)=>'https://ui-avatars.com/api/?name='+encodeURIComponent(name||'AMORI')+'&background=302438&color=fff&size=700&bold=true';
+ const mapProfile=(p)=>({...p,name:p.display_name||'Без имени',age:Number(p.age)||ageOf(p.birth_date),city:p.city||'Город не указан',bio:p.bio||'Пока ничего не рассказал(а) о себе.',interests:Array.isArray(p.interests)?p.interests:[],photo:avatar(p.display_name),verified:Boolean(p.is_verified)});
+ function ageOf(date){if(!date)return '';const d=new Date(date),n=new Date();return n.getFullYear()-d.getFullYear()-((n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))?1:0);}
+ async function load(){setLoading(true);setError('');try{const me=await apiClient.me();setProfile(me.profile||null);if(me.profile){setForm({displayName:me.profile.display_name||'',birthDate:String(me.profile.birth_date||'').slice(0,10),bio:me.profile.bio||'',city:me.profile.city||'',interests:Array.isArray(me.profile.interests)?me.profile.interests.join(', '):''});const results=await Promise.all([apiClient.discovery(30),apiClient.incomingLikes(),apiClient.matches()]);setPeople((results[0].profiles||[]).map(mapProfile));setLikes((results[1].profiles||[]).map(mapProfile));setMatches((results[2].matches||[]).map(mapProfile));}else{setPeople([]);setLikes([]);setMatches([]);setEditing(true);}}catch(e){setError(e instanceof ApiError?e.message:'Не удалось загрузить данные.');}finally{setLoading(false);}}
+ useEffect(()=>{load();},[]);
+ const filtered=people.filter(p=>{const parts=age.split('–').map(Number);return !p.age||(p.age>=parts[0]&&p.age<=parts[1]);});
+ const current=filtered[index];
+ async function next(like){if(!current||busy)return;setBusy(true);setError('');try{if(like){const result=await apiClient.like(current.id);if(result.matched){setShowMatch(current);const m=await apiClient.matches();setMatches((m.matches||[]).map(mapProfile));}}setIndex(v=>v+1);}catch(e){setError(e instanceof ApiError?e.message:'Не удалось выполнить действие.');}finally{setBusy(false);}}
+ async function save(e){e.preventDefault();setBusy(true);setError('');try{const r=await apiClient.saveMe({displayName:form.displayName.trim(),birthDate:form.birthDate,bio:form.bio.trim(),city:form.city.trim(),interests:form.interests.split(',').map(v=>v.trim()).filter(Boolean).slice(0,20)});setProfile(r.profile);setEditing(false);setTab('discover');setIndex(0);await load();}catch(e){setError(e instanceof ApiError?e.message:'Не удалось сохранить анкету.');}finally{setBusy(false);}}
+ const name=profile?.display_name||tgUser?.first_name||'Твой профиль';
+ return <div className="app-shell"><div className="ambient ambient-one"/><div className="ambient ambient-two"/>
+ <header className="topbar"><Brand/><div className="top-actions"><button className="premium-pill" onClick={()=>setTab('premium')}><Crown size={14}/> Premium</button><button className="avatar-mini" onClick={()=>setTab('profile')}><img src={avatar(name)} alt="Профиль"/></button></div></header>
+ <main className="main-content">
+ {error&&<div className="api-alert" role="alert"><span>{error}</span><button onClick={load}>Повторить</button></div>}
+ {loading?<div className="empty-state"><div className="empty-icon"><Sparkles size={28}/></div><h3>Загружаем AMORI…</h3><p>Получаем данные твоего аккаунта.</p></div>:<>
+ {tab==='discover'&&<><section className="welcome-row"><div><div className="eyebrow"><Sparkles size={13}/> ТВОЯ ИСТОРИЯ НАЧИНАЕТСЯ ЗДЕСЬ</div><h1>Искра может<br/><span>быть рядом.</span></h1><p className="subtitle">Реальные анкеты из AMORI.</p></div><button className="filter-button" onClick={()=>setShowFilters(true)}><SlidersHorizontal size={18}/></button></section>
+ <div className="discovery-meta"><div className="people-count"><span className="pulse-dot"/><strong>{filtered.length}</strong> анкет доступно</div></div>
+ {!profile?<EmptyState icon={UserRound} title="Создай свою анкету" body="Заполни профиль, чтобы начать знакомиться."/>:current?<><section className="deck-wrap"><AnimatePresence mode="wait"><ProfileCard key={current.id} person={current} onLike={()=>next(true)} onPass={()=>next(false)} index={index}/></AnimatePresence></section><div className="swipe-hint"><span>← Пропустить</span><span>Нравится →</span></div></>:<EmptyState icon={Heart} title="Анкеты закончились" body="Новых анкет пока нет. Попробуй позже."/>}</>}
+ {tab==='likes'&&<><section className="page-heading"><div className="eyebrow"><Heart size={13}/> СИМПАТИИ</div><h1>Кому ты<br/><span>понравился.</span></h1></section>{likes.length?<div className="likes-grid">{likes.map(p=><div className="like-tile" key={p.id}><img src={p.photo} alt={p.name}/><span className="tile-gradient"/><span className="tile-name">{p.name}{p.age?', '+p.age:''}</span></div>)}</div>:<EmptyState icon={Heart} title="Пока нет лайков" body="Входящие симпатии появятся здесь."/>}</>}
+ {tab==='matches'&&<><section className="page-heading"><div className="eyebrow"><Sparkles size={13}/> СОВПАДЕНИЯ</div><h1>Это уже<br/><span>что-то особенное.</span></h1></section>{matches.length?<div className="match-list">{matches.map(p=><div className="match-row" key={p.match_id||p.id}><img src={p.photo} alt={p.name}/><div><strong>{p.name}{p.age?', '+p.age:''}</strong><span>Взаимная симпатия</span></div><span className="chat-arrow"><MessageCircle size={18}/></span></div>)}</div>:<EmptyState icon={MessageCircle} title="Пока нет совпадений" body="Взаимные лайки появятся здесь."/>}</>}
+ {tab==='profile'&&<><section className="page-heading"><div className="eyebrow"><UserRound size={13}/> ТВОЁ ПРОСТРАНСТВО</div><h1>Покажи себя<br/><span>настоящего.</span></h1></section>{profile?<div className="own-profile"><div className="own-photo"><img src={avatar(name)} alt="Профиль"/></div><div className="own-details"><h2>{profile.display_name}</h2><p>{profile.bio||'Добавь описание о себе.'}</p><button className="primary-button" onClick={()=>setEditing(true)}>Редактировать анкету <ChevronRight size={16}/></button></div></div>:<EmptyState icon={UserRound} title="Анкета не создана" body="Создай профиль, чтобы пользоваться поиском."/>}<div className="settings-list"><button onClick={()=>setTab('premium')}><span className="settings-icon gold"><Crown size={18}/></span><span><strong>AMORI Premium</strong><small>Оплата пока отключена</small></span><ChevronRight size={17}/></button></div></>}
+ {tab==='premium'&&<><section className="page-heading"><div className="eyebrow"><Crown size={13}/> AMORI PLUS</div><h1>Больше искр.<br/><span>Меньше границ.</span></h1></section><div className="premium-card"><div className="crown-large"><Crown size={30}/></div><h2>Твоя история.<br/>Твои правила.</h2><p>Premium появится после подключения безопасной оплаты.</p><button className="primary-button" disabled>Скоро появится</button><small>Списания не выполняются.</small></div></>}
+ </>}
+ <footer className="footer-note">AMORI — ближе к настоящим встречам <Heart size={12} fill="currentColor"/></footer></main>
+ <nav className="bottom-nav"><button className={tab==='discover'?'nav-item active':'nav-item'} onClick={()=>setTab('discover')}><Compass size={21}/><span>Поиск</span></button><button className={tab==='likes'?'nav-item active':'nav-item'} onClick={()=>setTab('likes')}><Heart size={21}/><span>Лайки</span>{likes.length>0&&<i className="nav-badge">{likes.length}</i>}</button><button className={tab==='matches'?'nav-item active':'nav-item'} onClick={()=>setTab('matches')}><MessageCircle size={21}/><span>Чаты</span></button><button className={tab==='profile'?'nav-item active':'nav-item'} onClick={()=>setTab('profile')}><UserRound size={21}/><span>Профиль</span></button></nav>
+ <AnimatePresence>{editing&&<motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><motion.form className="filter-sheet profile-form" initial={{y:50}} animate={{y:0}} exit={{y:50}} onSubmit={save}><div className="sheet-handle"/><div className="sheet-heading"><div><span className="eyebrow">ТВОЯ АНКЕТА</span><h2>{profile?'Редактировать профиль':'Создать профиль'}</h2></div><button type="button" className="close-button" onClick={()=>profile&&setEditing(false)}><X size={19}/></button></div>
+ <label className="field-label">Имя</label><input className="profile-input" required maxLength={40} value={form.displayName} onChange={e=>setForm({...form,displayName:e.target.value})} placeholder="Как тебя зовут?"/>
+ <label className="field-label">Дата рождения (18+)</label><input className="profile-input" type="date" required value={form.birthDate} max={new Date(Date.now()-18*365.25*86400000).toISOString().slice(0,10)} onChange={e=>setForm({...form,birthDate:e.target.value})}/>
+ <label className="field-label">Город</label><input className="profile-input" maxLength={100} value={form.city} onChange={e=>setForm({...form,city:e.target.value})} placeholder="Цюрих"/>
+ <label className="field-label">О себе</label><textarea className="profile-input profile-textarea" maxLength={500} value={form.bio} onChange={e=>setForm({...form,bio:e.target.value})} placeholder="Расскажи о себе"/>
+ <label className="field-label">Интересы через запятую</label><input className="profile-input" value={form.interests} onChange={e=>setForm({...form,interests:e.target.value})} placeholder="Кофе, горы, кино"/>
+ <button className="primary-button full-width" type="submit" disabled={busy}>{busy?'Сохраняем…':'Сохранить анкету'} <Check size={16}/></button></motion.form></motion.div>}</AnimatePresence>
+ <AnimatePresence>{showFilters&&<motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowFilters(false)}><motion.div className="filter-sheet" initial={{y:50}} animate={{y:0}} exit={{y:50}} onClick={e=>e.stopPropagation()}><div className="sheet-handle"/><div className="sheet-heading"><div><span className="eyebrow">НАСТРОЙКИ</span><h2>Твои предпочтения</h2></div><button className="close-button" onClick={()=>setShowFilters(false)}><X size={19}/></button></div><label className="field-label">Возраст</label><div className="age-options">{['18–24','20–30','25–35','30–45','18–99'].map(v=><button key={v} className={age===v?'age-option selected':'age-option'} onClick={()=>setAge(v)}>{v}</button>)}</div><label className="field-label">Расстояние: до {distance} км</label><input className="range" type="range" min="1" max="100" value={distance} onChange={e=>setDistance(Number(e.target.value)}/><button className="primary-button full-width" onClick={()=>{setIndex(0);setShowFilters(false)}}>Показать анкеты <Sparkles size={16}/></button></motion.div></motion.div>}</AnimatePresence>
+ <AnimatePresence>{showMatch&&<motion.div className="modal-backdrop match-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowMatch(null)}><motion.div className="match-modal" initial={{scale:.88,y:18}} animate={{scale:1,y:0}} exit={{scale:.92}} onClick={e=>e.stopPropagation()}><button className="match-close" onClick={()=>setShowMatch(null)}><X size={18}/></button><div className="match-sparkles"><Sparkles/><Heart fill="currentColor"/><Sparkles/></div><div className="match-photos"><img src={avatar(name)} alt="Ты"/><span><Heart size={18} fill="currentColor"/></span><img src={showMatch.photo} alt={showMatch.name}/></div><div className="eyebrow centered">ЭТО ВЗАИМНО</div><h2>Есть искра! ✨</h2><p>Вы с {showMatch.name} понравились друг другу.</p><button className="primary-button full-width" onClick={()=>{setShowMatch(null);setTab('matches')}}><MessageCircle size={17}/> К совпадениям</button></motion.div></motion.div>}</AnimatePresence>
+ </div>;
 }
