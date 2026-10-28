@@ -1,26 +1,29 @@
-# Implementation status
+# AMORI implementation status
 
-## Added on the feature branch
+## Implemented on the feature branch
 
-- Responsive React/Vite Telegram Mini App interface with a custom dark gradient visual system.
-- Animated discovery cards, like/pass interactions, likes, matches, profile/preferences and a Premium preview.
-- Telegram WebApp shell initialization and safe static-site deployment blueprint.
-- Initial PostgreSQL schema for adult profiles, moderated photos, likes, matches, blocks, reports, entitlements and admin audit events.
-- Architecture, roadmap and environment-variable template.
+- Responsive React/Vite Telegram Mini App interface with animated discovery cards, likes, matches, profile/preferences and a Premium preview.
+- Telegram WebApp initialization and a separate Render static-site deployment.
+- Separate Node.js API service with Telegram initData signature verification and freshness checks.
+- API endpoints for profile read/write, discovery, likes and mutual matches, blocks, reports, admin report review, and authenticated Telegram identity.
+- Initial PostgreSQL schema and a versioned migration runner.
+- Automated unit tests for Telegram WebApp authentication validation.
+- Numeric Telegram user IDs, rather than usernames, are used for server-side admin authorization.
 
-## Prototype limitations
+## Still needs configuration or implementation
 
-- Discovery cards and photos are demo content.
-- Like/match state is stored only in client memory and resets on reload.
-- There is no production API, Telegram initData verification endpoint, chat persistence, photo upload, moderation console, or real payment integration yet.
-- The Premium screen is a preview; it does not charge users.
-- The initial SQL migration has not been applied to any database.
+- API environment variables `BOT_TOKEN`, `DATABASE_URL`, `OWNER_TELEGRAM_ID`, and `ADMIN_TELEGRAM_IDS` must be configured in Render. Do not put secrets in GitHub or send them in chat.
+- Apply the initial migration after the database connection is configured.
+- The frontend still uses demo profiles and local-only interaction state; connect the UI to the API before calling this a working dating service.
+- Persistent chat messages, private photo uploads/storage, photo moderation, full moderation UI, rate limiting, data export/deletion, and payment webhooks remain to be implemented.
+- The current Render free Postgres instance is a temporary development database and expires on 2026-11-27. Choose a durable database plan before production use.
+- Premium is a preview only; no payments are enabled.
 
 ## Release gates
 
-1. Confirm a dedicated database and a hosting service for this repository.
-2. Implement a backend that verifies Telegram WebApp initData and enforces authorization server-side.
-3. Apply and test migrations; add rate limits, block/report enforcement, photo moderation and retention rules.
-4. Replace demo data with authenticated API responses and add integration tests.
-5. Configure owner/admin numeric Telegram IDs as secret environment variables.
-6. Run end-to-end tests in Telegram before promoting the branch to main.
+1. Configure and verify bot/database credentials in hosting.
+2. Run tests and apply migrations.
+3. Connect Mini App UI to the authenticated API and replace demo data.
+4. Add chat persistence, media safety/moderation, rate limits, block/report enforcement, and privacy controls.
+5. Verify owner/admin IDs and test end-to-end inside Telegram.
+6. Only then promote the branch to main.
