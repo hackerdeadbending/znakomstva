@@ -17,12 +17,12 @@ function ProfileCard({ person, onLike, onPass, index }) {
     exit={{ opacity: 0, x: 80, rotate: 7, scale: .92 }} transition={{ duration: .28, ease: 'easeOut' }}>
     <img className="profile-photo" src={person.photo} alt={`Фото ${person.name}`} />
     <div className="photo-shade" />
-    <div className="card-topline"><span className="verified"><BadgeCheck size={14} fill="currentColor"/> Настоящие люди</span><button className="icon-glass" aria-label="Дополнительно"><MoreHorizontal size={20}/></button></div>
+    <div className="card-topline"><span className="verified"><ShieldCheck size={14}/> Анкета AMORI</span><button className="icon-glass" aria-label="Дополнительно"><MoreHorizontal size={20}/></button></div>
     <div className="photo-pagination"><i className="active"/><i/><i/><i/></div>
     <div className="profile-info">
-      <div className="online-line">{person.online && <><span className="online-dot"/><span>Сейчас онлайн</span></>}</div>
-      <h2>{person.name}<span className="age">, {person.age}</span><BadgeCheck className="verified-large" size={20} fill="currentColor"/></h2>
-      <div className="location"><MapPin size={14}/>{person.city}<span className="location-sep">·</span>{person.distance}</div>
+      <div className="online-line">{person.verified && <><span className="online-dot"/><span>Профиль проверен</span></>}</div>
+      <h2>{person.name}<span className="age">, {person.age}</span>{person.verified && <BadgeCheck className="verified-large" size={20} fill="currentColor"/>}</h2>
+      <div className="location"><MapPin size={14}/>{person.city}</div>
       <p className="bio">{person.bio}</p>
       <div className="interest-row">{person.interests.map((interest) => <span key={interest} className="interest">{interest}</span>)}</div>
     </div>
