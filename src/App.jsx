@@ -7,14 +7,6 @@ import {
   Camera, ShieldCheck, MoreHorizontal, Send, Compass, Star, Check
 } from 'lucide-react';
 
-const people = [
-  { id: 1, name: 'Алиса', age: 24, city: 'Цюрих', distance: '2 км от тебя', km: 2, bio: 'Собираю впечатления, а не вещи ✨', interests: ['Путешествия', 'Кофе', 'Искусство'], photo: 'photo-1524504388940-b1c1722653e1', color: 'rose', online: true },
-  { id: 2, name: 'Мия', age: 22, city: 'Цюрих', distance: '4 км от тебя', km: 4, bio: 'Спонтанная поездка? Я уже собираюсь.', interests: ['Музыка', 'Море', 'Кино'], photo: 'photo-1529139574466-a303027c1d8b', color: 'violet', online: true },
-  { id: 3, name: 'София', age: 26, city: 'Винтертур', distance: '12 км от тебя', km: 12, bio: 'За честность, долгие разговоры и матчу.', interests: ['Матча', 'Книги', 'Йога'], photo: 'photo-1534528741775-53994a69daeb', color: 'peach', online: false },
-  { id: 4, name: 'Эмма', age: 23, city: 'Цюрих', distance: '3 км от тебя', km: 3, bio: 'Ищу человека, с которым легко молчать.', interests: ['Дизайн', 'Горы', 'Бранчи'], photo: 'photo-1524250502761-1ac6f2e30d43', color: 'blue', online: true }
-];
-const photo = (id, w = 900) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=85`;
-
 function Brand() {
   return <div className="brand"><span className="brand-mark"><Heart size={17} fill="currentColor" strokeWidth={2.2}/></span><span>AMORI<span className="brand-dot">.</span></span></div>;
 }
