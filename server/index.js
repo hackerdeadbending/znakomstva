@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import pg from 'pg';
 import { verifyTelegramInitData } from './telegram-auth.js';
+import { startTelegramBot } from './telegram-bot.js';
 
 const { Pool } = pg;
 const app = express();
@@ -199,4 +200,7 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'internal_error' });
 });
 
-app.listen(PORT, () => console.log(`AMORI API listening on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`AMORI API listening on ${PORT}`);
+  startTelegramBot(BOT_TOKEN);
+});
