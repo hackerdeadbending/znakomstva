@@ -1,22 +1,41 @@
-# Znakomstva — Telegram dating bot
+# Znakomstva — Telegram Mini App
 
-A Telegram-first dating experience focused on simple discovery, mutual matches, privacy, and safety.
+A polished, mobile-first dating Mini App for Telegram, built around profile discovery, mutual matches, privacy and safety.
+
+## Start locally
+
+Requirements: Node.js 20+.
+
+    npm install
+    npm run dev
+
+Vite prints a local development URL. To create a production bundle:
+
+    npm run build
+    npm run preview
+
+The interface initializes Telegram WebApp when opened inside Telegram and remains viewable in a normal browser for UI development.
 
 ## Current status
-The repository initially contained no application source code, so implementation starts with a documented modular foundation. See [the architecture](docs/ARCHITECTURE.md) and [the roadmap](docs/ROADMAP.md).
 
-## Planned core experience
-- Profile creation and editing, with photos and preferences.
-- One-at-a-time discovery cards, like/pass, and mutual matches.
-- Privacy controls, profile pause, block, and report.
-- Owner/admin tools with auditable moderation.
-- A modular entitlement system reserved for future Premium features.
+The current feature branch contains a front-end prototype and the initial database design. Demo profiles, likes and match feedback are not yet backed by a server and reset on refresh. Do not treat the prototype as a live dating service.
 
-## Security notes
-- Never commit bot tokens, database credentials, or populated environment files.
-- Use numeric Telegram user IDs for privileged authorization; usernames can change.
-- Billing stays disabled until a payment provider and verified webhook flow are implemented.
-- Do not deploy as production-ready until the runtime and current hosting configuration are confirmed and end-to-end tests pass.
+See:
+- [Architecture](docs/ARCHITECTURE.md)
+- [Telegram Mini App plan](docs/TELEGRAM_MINI_APP.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Implementation status and release gates](docs/IMPLEMENTATION_STATUS.md)
+- [Initial PostgreSQL schema](db/migrations/001_initial_schema.sql)
 
-## Setup
-See `.env.example` for the safe configuration template. The runtime and database must be selected or confirmed before implementation of the bot entry point.
+## Safety and privacy
+
+- The service is intended for adults 18+ only.
+- Telegram WebApp initData must be signature-verified by a backend before identifying a user.
+- Admin access must use numeric Telegram user IDs configured as secret environment variables. Usernames can change and are not authorization.
+- Never commit bot tokens, database credentials, or populated .env files.
+- Premium is a preview only; payment is not connected.
+- Block/report enforcement, moderation, and backend authorization are release blockers.
+
+## Deployment
+
+A Render Blueprint is provided in render.yaml for the static front-end prototype on the feature branch. The existing Render service found in the connected workspace belongs to another repository, so it has deliberately not been modified. Deploy this repository as its own service after reviewing the branch and hosting settings.
