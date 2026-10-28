@@ -28,6 +28,7 @@ async function reply(token, chatId, text, replyMarkup) {
   return telegram(token, 'sendMessage', {
     chat_id: chatId,
     text,
+    parse_mode: 'HTML',
     ...(replyMarkup ? { reply_markup: replyMarkup } : {})
   });
 }
@@ -36,21 +37,35 @@ async function handleUpdate(token, update) {
   const message = update.message;
   if (!message?.chat?.id) return;
   const text = (message.text || '').trim();
+
   if (text.startsWith('/start')) {
     await reply(
       token,
       message.chat.id,
-      'Привет! 💗 Это AMORI — знакомства, где всё начинается с искры.\n\nСоздай анкету, смотри людей и находи взаимные симпатии. Приложение открывается прямо в Telegram.',
+      'Привет! 💗\n\nЭто <b>AMORI</b> — знакомства прямо в Telegram.\n\nНажми кнопку ниже, чтобы открыть приложение и начать знакомиться:',
       launchKeyboard()
     );
     return;
   }
+
   if (text.startsWith('/help')) {
-    await reply(token, message.chat.id, 'Нажми кнопку ниже, чтобы открыть AMORI. Если приложение не загружается, отправь /start ещё раз.', launchKeyboard());
+    await reply(
+      token,
+      message.chat.id,
+      'Нажми кнопку «💗 Открыть AMORI», чтобы запустить приложение.\n\nЕсли кнопка не работает — отправь /start ещё раз.',
+      launchKeyboard()
+    );
     return;
   }
+
+  // Любое другое сообщение в личке — тоже предлагаем открыть приложение
   if (message.chat.type === 'private') {
-    await reply(token, message.chat.id, 'Чтобы начать знакомиться, нажми «Открыть AMORI».', launchKeyboard());
+    await reply(
+      token,
+      message.chat.id,
+      'Чтобы начать знакомиться, нажми кнопку ниже 👇',
+      launchKeyboard()
+    );
   }
 }
 
@@ -68,13 +83,25 @@ export function startTelegramBot(token) {
     try {
       // Long polling and webhooks cannot run at the same time.
       await telegram(token, 'deleteWebhook', { drop_pending_updates: false });
+
+      // Команды в меню бота
       await telegram(token, 'setMyCommands', {
         commands: [
           { command: 'start', description: 'Открыть AMORI' },
           { command: 'help', description: 'Помощь' }
         ]
       });
-      console.log('AMORI Telegram bot polling started.');
+
+      // Постоянная кнопка меню слева внизу — сразу открывает мини-приложение
+      await telegram(token, 'setChatMenuButton', {
+        menu_button: {
+          type: 'web_app',
+          text: 'Открыть AMORI',
+          web_app: { url: MINI_APP_URL }
+        }
+      });
+
+      console.log('AMORI Telegram bot polling started. Menu button set.');
     } catch (error) {
       console.error('AMORI Telegram bot setup failed:', error.message);
       await pause(5000);
