@@ -1,4 +1,4 @@
-# Znakomstva — Telegram Mini App
+# AMORI — Telegram Mini App
 
 A polished, mobile-first dating Mini App for Telegram, built around profile discovery, mutual matches, privacy and safety.
 
@@ -11,6 +11,7 @@ Requirements: Node.js 20+.
 
 Vite prints a local development URL. To create a production bundle:
 
+    npm test
     npm run build
     npm run preview
 
@@ -18,7 +19,7 @@ The interface initializes Telegram WebApp when opened inside Telegram and remain
 
 ## Current status
 
-The current feature branch contains a front-end prototype and the initial database design. Demo profiles, likes and match feedback are not yet backed by a server and reset on refresh. Do not treat the prototype as a live dating service.
+The current feature branch contains a front-end prototype, an initial authenticated API, and the initial database design. Demo profiles, likes and match feedback are not yet backed by a server and reset on refresh. Do not treat the prototype as a live dating service.
 
 See:
 - [Architecture](docs/ARCHITECTURE.md)
