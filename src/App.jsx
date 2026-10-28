@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Heart, X, Sparkles, MessageCircle, UserRound, SlidersHorizontal,
@@ -22,7 +22,7 @@ function ProfileCard({ person, onLike, onPass, index }) {
   return <motion.article className="profile-card" key={person.id}
     initial={{ opacity: 0, y: 20, scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, x: 80, rotate: 7, scale: .92 }} transition={{ duration: .28, ease: 'easeOut' }}>
-    <img className="profile-photo" src={photo(person.photo)} alt={`Фото ${person.name}`} />
+    <img className="profile-photo" src={person.photo} alt={`Фото ${person.name}`} />
     <div className="photo-shade" />
     <div className="card-topline"><span className="verified"><BadgeCheck size={14} fill="currentColor"/> Настоящие люди</span><button className="icon-glass" aria-label="Дополнительно"><MoreHorizontal size={20}/></button></div>
     <div className="photo-pagination"><i className="active"/><i/><i/><i/></div>
@@ -46,8 +46,6 @@ function EmptyState({ title, body, icon: Icon }) {
 }
 
 import { useEffect, useState } from 'react';
-import { apiClient, ApiError } from './lib/api.js';
-
 export default function App() {
  const [tab,setTab]=useState('discover');
  const [profile,setProfile]=useState(null);
