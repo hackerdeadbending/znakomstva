@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import crypto from 'node:crypto';
 import pg from 'pg';
+import { verifyTelegramInitData } from './telegram-auth.js';
 
 const { Pool } = pg;
 const app = express();
@@ -21,26 +21,7 @@ const pool = DATABASE_URL ? new Pool({ connectionString: DATABASE_URL, ssl: proc
 app.get('/health', (_req, res) => res.json({ ok: true, service: 'amori-api', configured: Boolean(BOT_TOKEN && pool) }));
 app.get('/api/status', (_req, res) => res.json({ name: 'AMORI API', ready: Boolean(BOT_TOKEN && pool), missing: [!BOT_TOKEN && 'BOT_TOKEN', !pool && 'DATABASE_URL'].filter(Boolean) }));
 
-function verifyInitData(raw) {
-  if (!BOT_TOKEN || !raw || raw.length > 12000) return null;
-  const params = new URLSearchParams(raw);
-  const hash = params.get('hash');
-  const authDate = Number(params.get('auth_date'));
-  if (!hash || !Number.isFinite(authDate)) return null;
-  const now = Math.floor(Date.now() / 1000);
-  if (authDate > now + 30 || now - authDate > 86400) return null;
-  const checkString = [...params.entries()].filter(([key]) => key !== 'hash').sort(([a],[b]) => a.localeCompare(b)).map(([key,value]) => key + '=' + value).join('\n');
-  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
-  const expected = crypto.createHmac('sha256', secretKey).update(checkString).digest();
-  let supplied;
-  try { supplied = Buffer.from(hash, 'hex'); } catch { return null; }
-  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return null;
-  try {
-    const user = JSON.parse(params.get('user') || 'null');
-    if (!user || !Number.isSafeInteger(Number(user.id))) return null;
-    return { id: String(user.id), firstName: String(user.first_name || '').slice(0, 40), username: String(user.username || '').slice(0, 64) };
-  } catch { return null; }
-}
+function verifyInitData(raw) { return verifyTelegramInitData(raw, BOT_TOKEN); }
 
 function requireConfig(_req, res, next) {
   if (!BOT_TOKEN || !pool) return res.status(503).json({ error: 'service_not_configured', message: 'The API needs BOT_TOKEN and DATABASE_URL in the hosting environment.' });
