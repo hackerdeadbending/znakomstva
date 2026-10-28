@@ -8,7 +8,7 @@ const { Pool } = pg;
 const app = express();
 app.disable('x-powered-by');
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',').map(v => v.trim()) : true, methods: ['GET','POST','PATCH','OPTIONS'], allowedHeaders: ['Content-Type','X-Telegram-Init-Data'] }));
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN ? process.env.ALLOWED_ORIGIN.split(',').map(v => v.trim()) : true, methods: ['GET','POST','PUT','PATCH','OPTIONS'], allowedHeaders: ['Content-Type','X-Telegram-Init-Data'] }));
 app.use(express.json({ limit: '64kb' }));
 
 const PORT = Number(process.env.PORT || 3001);
