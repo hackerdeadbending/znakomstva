@@ -31,7 +31,7 @@ function buildConfig(options) {
     ownerUsername: String(process.env.OWNER_USERNAME || 'regentdvdd').trim().replace(/^@/, '').toLowerCase(),
     adminUsernames: names(process.env.ADMIN_USERNAMES || 'makson_ss'),
     paymentsEnabled: ['1', 'true', 'yes', 'on'].includes(String(process.env.PAYMENTS_ENABLED || '').toLowerCase()),
-    miniAppUrl: process.env.MINI_APP_URL || 'https://znakomstva-mini-app.onrender.com'
+    miniAppUrl: String(process.env.MINI_APP_URL || '').trim()
   };
 }
 
@@ -442,6 +442,10 @@ async function ensureReady(app) {
 async function legacyReply(app, update) {
   const message = update.message;
   if (!message?.chat?.id || message.chat.type !== 'private') return;
+  if (!app.cfg.miniAppUrl) {
+    await app.tg.sendMessage(message.chat.id, 'Привет! 💗 Бот ещё настраивается — загляни чуть позже.');
+    return;
+  }
   await app.tg.sendMessage(message.chat.id, 'Привет! 💗\n\nЭто <b>AMORI</b> — знакомства прямо в Telegram.\n\nНажми кнопку ниже, чтобы открыть приложение:', {
     reply_markup: { inline_keyboard: [[{ text: '💗 Открыть AMORI', web_app: { url: app.cfg.miniAppUrl } }]] }
   });
@@ -474,7 +478,7 @@ async function poll(app) {
         { command: 'help', description: 'Помощь' }
       ]
     });
-    await tg.call('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Открыть AMORI', web_app: { url: cfg.miniAppUrl } } });
+    await tg.call('setChatMenuButton', { menu_button: cfg.miniAppUrl ? { type: 'web_app', text: 'Открыть AMORI', web_app: { url: cfg.miniAppUrl } } : { type: 'commands' } });
     console.log('AMORI Telegram bot polling started.');
   } catch (error) {
     console.error('AMORI Telegram bot setup failed:', error.message);
