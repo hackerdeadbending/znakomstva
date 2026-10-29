@@ -5,7 +5,8 @@ export const BTN = {
   likes: '💌 Лайки',
   matches: '💬 Пары',
   profile: '👤 Профиль',
-  premium: '⭐ Premium'
+  premium: '⭐ Premium',
+  admin: '🛠 Админка'
 };
 
 export const REPORT_REASONS = {
@@ -31,9 +32,10 @@ export function inlineKeyboard(rows) {
   return { inline_keyboard: rows.map(row => row.map(([text, callback_data]) => ({ text, callback_data }))) };
 }
 
-export function mainMenu({ paymentsEnabled, miniAppUrl }) {
+export function mainMenu({ paymentsEnabled, miniAppUrl, isStaff }) {
   const rows = [[BTN.browse, BTN.likes], [BTN.matches, BTN.profile]];
   if (paymentsEnabled) rows[1].push(BTN.premium);
+  if (isStaff) rows.push([BTN.admin]);
   if (miniAppUrl) rows.push([{ text: '💗 Mini App', web_app: { url: miniAppUrl } }]);
   return replyKeyboard(rows);
 }

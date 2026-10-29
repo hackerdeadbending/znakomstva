@@ -6,7 +6,7 @@ import {
   upsellMarkup, cardText, profileText, profileMarkup, sendCardTo
 } from './ui.js';
 import { escapeHtml, parseBirthDate, parseCommand, contactLink, formatDate, sleep } from './util.js';
-import { handleAdminCommand, handleAdminCallback, handleBroadcastText } from './admin.js';
+import { handleAdminCommand, handleAdminCallback, handleAdminText, showAdminHome } from './admin.js';
 
 const GENDER_BUTTONS = { '👨 Парень': 'm', '👩 Девушка': 'f' };
 const LOOKING_BUTTONS = { '👨 Парней': 'm', '👩 Девушек': 'f', '👥 Всех': 'a' };
@@ -79,7 +79,7 @@ async function buildContext(app, from, chatId) {
   };
 }
 
-const menuFor = ctx => mainMenu({ paymentsEnabled: ctx.cfg.paymentsEnabled, miniAppUrl: ctx.cfg.miniAppUrl });
+const menuFor = ctx => mainMenu({ paymentsEnabled: ctx.cfg.paymentsEnabled, miniAppUrl: ctx.cfg.miniAppUrl, isStaff: ctx.isStaff });
 const say = (ctx, text, extra) => ctx.tg.sendMessage(ctx.chatId, text, extra);
 
 async function showMenu(ctx, text) {
@@ -266,7 +266,7 @@ async function onMessage(app, message) {
 
   const state = ctx.user.state || '';
   if (state.startsWith('reg_')) return onRegistration(ctx, message, state);
-  if (state === 'admin_broadcast' && ctx.isStaff) return handleBroadcastText(ctx, text);
+  if (state.startsWith('admin_') && ctx.isStaff) return handleAdminText(ctx, text, state);
 
   switch (text) {
     case BTN.browse: return showNext(ctx);
@@ -274,6 +274,9 @@ async function onMessage(app, message) {
     case BTN.matches: return showMatches(ctx);
     case BTN.profile: return showProfile(ctx);
     case BTN.premium: return showPremium(ctx);
+    case BTN.admin:
+      if (ctx.isStaff) return showAdminHome(ctx);
+      break;
   }
   return showMenu(ctx, 'Выбери действие в меню 👇');
 }

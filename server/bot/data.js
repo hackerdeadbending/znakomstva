@@ -36,12 +36,56 @@ export async function listStaff(db) {
   return result.rows;
 }
 
-export async function broadcastRecipients(db) {
+export async function broadcastRecipients(db, segment = 'all') {
+  const conditions = {
+    all: 'true',
+    m: `p.gender = 'm'`,
+    f: `p.gender = 'f'`,
+    premium: `exists (select 1 from entitlements e where e.profile_id = p.id and e.feature_key = 'premium' and e.starts_at <= now() and (e.expires_at is null or e.expires_at > now()))`
+  };
   const result = await db.query(
     `select u.telegram_user_id from bot_users u
-     where not u.is_banned and exists (select 1 from profiles p where p.telegram_user_id=u.telegram_user_id)`
+     join profiles p on p.telegram_user_id = u.telegram_user_id
+     where not u.is_banned and ${conditions[segment] || 'true'}`
   );
   return result.rows.map(row => row.telegram_user_id);
+}
+
+export async function countUsers(db) {
+  const result = await db.query('select count(*)::int as n from bot_users');
+  return result.rows[0].n;
+}
+
+export async function listUsers(db, offset, limit) {
+  const result = await db.query(
+    `select u.telegram_user_id, u.username, u.role, u.is_banned, p.display_name
+     from bot_users u left join profiles p on p.telegram_user_id = u.telegram_user_id
+     order by u.created_at desc offset $1 limit $2`,
+    [offset, limit]
+  );
+  return result.rows;
+}
+
+export async function userStats(db, profileId) {
+  const result = await db.query(
+    `select
+       (select count(*)::int from likes where from_profile_id=$1) as sent,
+       (select count(*)::int from likes where to_profile_id=$1) as got,
+       (select count(*)::int from matches where profile_a_id=$1 or profile_b_id=$1) as matches,
+       (select count(*)::int from reports where reported_profile_id=$1) as reports`,
+    [profileId]
+  );
+  return result.rows[0];
+}
+
+export async function recentAudit(db, limit = 15) {
+  const result = await db.query(
+    `select a.created_at, a.action, a.target_id, a.actor_telegram_user_id as actor_id, u.username
+     from admin_audit_log a left join bot_users u on u.telegram_user_id = a.actor_telegram_user_id
+     order by a.created_at desc limit $1`,
+    [limit]
+  );
+  return result.rows;
 }
 
 // ---------- profiles ----------
@@ -262,17 +306,28 @@ export async function stats(db) {
   const result = await db.query(`
     select
       (select count(*)::int from bot_users) as users,
+      (select count(*)::int from bot_users where created_at > now() - interval '24 hours') as new24,
+      (select count(*)::int from bot_users where created_at > now() - interval '7 days') as new7,
+      (select count(*)::int from bot_users where last_seen_at > now() - interval '24 hours') as dau,
+      (select count(*)::int from bot_users where last_seen_at > now() - interval '7 days') as wau,
       (select count(*)::int from profiles) as profiles,
       (select count(*)::int from profiles where is_visible and photo_file_id is not null) as active,
+      (select count(*)::int from profiles where gender='m') as men,
+      (select count(*)::int from profiles where gender='f') as women,
       (select count(*)::int from bot_users where is_banned) as banned,
-      (select count(*)::int from bot_users where created_at > now() - interval '24 hours') as new24,
       (select count(*)::int from likes) as likes,
+      (select count(*)::int from likes where created_at > now() - interval '24 hours') as likes24,
       (select count(*)::int from matches) as matches,
+      (select count(*)::int from matches where created_at > now() - interval '24 hours') as matches24,
       (select count(*)::int from reports where status in ('open','reviewing')) as open_reports,
       (select count(distinct profile_id)::int from entitlements
          where feature_key='premium' and starts_at <= now() and (expires_at is null or expires_at > now())) as premium,
-      (select count(*)::int from purchases) as purchases`);
-  return result.rows[0];
+      (select count(*)::int from purchases) as purchases,
+      (select coalesce(sum(stars),0)::int from purchases) as stars`);
+  const cities = await db.query(
+    `select lower(city) as city, count(*)::int as n from profiles where city <> '' group by lower(city) order by n desc limit 5`
+  );
+  return { ...result.rows[0], cities: cities.rows };
 }
 
 export async function audit(db, actorTelegramId, action, targetType, targetId, metadata = {}) {

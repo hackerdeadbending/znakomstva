@@ -36,6 +36,8 @@ export function createTelegram(token) {
       call('sendPhoto', { chat_id: chatId, photo, caption, parse_mode: 'HTML', ...extra }),
     answerCallback: (id, text = '', alert = false) =>
       safe('answerCallbackQuery', { callback_query_id: id, text, show_alert: alert }),
+    editText: (chatId, messageId, text, markup) =>
+      call('editMessageText', { chat_id: chatId, message_id: messageId, text, parse_mode: 'HTML', link_preview_options: { is_disabled: true }, reply_markup: markup || { inline_keyboard: [] } }),
     setMarkup: (chatId, messageId, markup) =>
       safe('editMessageReplyMarkup', { chat_id: chatId, message_id: messageId, reply_markup: markup || { inline_keyboard: [] } }),
     editCaption: (chatId, messageId, caption, markup) =>

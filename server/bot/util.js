@@ -38,3 +38,7 @@ export function formatDate(value) {
 }
 
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+export function formatDateTime(value) {
+  return new Date(value).toLocaleString('ru-RU', { timeZone: 'UTC', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' UTC';
+}
