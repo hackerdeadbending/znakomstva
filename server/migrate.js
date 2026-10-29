@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import pg from 'pg';
 
@@ -15,12 +15,16 @@ const pool = new Pool({
 });
 try {
   await pool.query('create table if not exists schema_migrations (version text primary key, applied_at timestamptz not null default now())');
-  const version = '001_initial_schema';
-  const exists = await pool.query('select 1 from schema_migrations where version=$1', [version]);
-  if (exists.rowCount) {
-    console.log('Migration already applied:', version);
-  } else {
-    const sql = await readFile(resolve('db/migrations/001_initial_schema.sql'), 'utf8');
+  const dir = resolve('db/migrations');
+  const files = (await readdir(dir)).filter(name => /^\d+_.+\.sql$/.test(name)).sort();
+  for (const file of files) {
+    const version = file.replace(/\.sql$/, '');
+    const exists = await pool.query('select 1 from schema_migrations where version=$1', [version]);
+    if (exists.rowCount) {
+      console.log('Migration already applied:', version);
+      continue;
+    }
+    const sql = await readFile(resolve(dir, file), 'utf8');
     const client = await pool.connect();
     try {
       await client.query('begin');

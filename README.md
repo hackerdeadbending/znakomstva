@@ -40,3 +40,7 @@ See:
 ## Deployment
 
 A Render Blueprint is provided in render.yaml for the static front-end prototype on the feature branch. The existing Render service found in the connected workspace belongs to another repository, so it has deliberately not been modified. Deploy this repository as its own service after reviewing the branch and hosting settings.
+
+## Chat bot (Leomatch-style)
+
+The Telegram bot now also works natively in chat: profile feed, likes, matches, reports, admin tools and a paywall-ready entitlement layer. See [Chat bot](docs/CHAT_BOT.md). Apply `db/migrations/002_chat_bot.sql` with `npm run migrate`; until then the bot keeps its previous behaviour.
