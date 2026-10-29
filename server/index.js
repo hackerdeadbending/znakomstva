@@ -202,5 +202,5 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`AMORI API listening on ${PORT}`);
-  startTelegramBot(BOT_TOKEN);
+  startTelegramBot(BOT_TOKEN, { db: pool, ownerId: OWNER_ID, adminIds: ADMIN_IDS });
 });

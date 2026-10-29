@@ -1,0 +1,58 @@
+# Чат-бот знакомств (формат Leomatch)
+
+Лента анкет прямо в чате бота: ❤️ / 👎, взаимная симпатия, контакты, «кто меня лайкнул», жалобы и блокировка, админ-команды.
+Работает на той же базе PostgreSQL и в том же процессе, что и API. Mini App остаётся доступен кнопкой «💗 Mini App».
+
+## Как включить
+
+1. Применить миграции: `npm run migrate` (теперь применяет все файлы из `db/migrations/` по порядку).
+2. В окружении сервиса (Render) задать:
+   - `BOT_TOKEN`, `DATABASE_URL` — уже используются API;
+   - `OWNER_TELEGRAM_ID` — Telegram ID владельца;
+   - `ADMIN_TELEGRAM_IDS` — ID остальных админов через запятую.
+3. Пока миграция 002 не применена, бот работает как раньше: показывает кнопку Mini App. Ничего не ломается.
+
+Свой ID бот показывает по команде `/whoami`.
+
+## Админы
+
+- Авторизация — по числовым Telegram ID из окружения.
+- Пока `OWNER_TELEGRAM_ID` не задан, `regentdvdd` (owner) и `makson_ss` (admin) могут один раз «занять» роль по username.
+  Роль привязывается к числовому ID и пишется в `admin_audit_log`. Как только задан `OWNER_TELEGRAM_ID`, новые заявки по username больше не принимаются.
+- Команды: `/admin`, `/stats`, `/reports`, `/broadcast`, `/ban`, `/unban`, `/user`.
+  Только владелец: `/addadmin`, `/deladmin`, `/admins`, `/grant`, `/paywall`, `/setlimit`.
+- Все привилегированные действия пишутся в `admin_audit_log`.
+
+## Платные функции (заготовка)
+
+Слой доступа — `server/bot/access.js`. По умолчанию paywall выключен, всё бесплатно.
+
+Как добавить платную функцию, не трогая остальной код:
+
+1. Добавь запись в `FEATURES` (`premiumOnly: true` или `freeDailyLimit: N`).
+2. В обработчике: `const gate = await check(db, ctx, 'key'); if (!gate.allowed) { ...показать gate.message... }`.
+3. Для дневных лимитов добавь счётчик в `USAGE`.
+4. Включение: `PAYMENTS_ENABLED=true`, затем `/paywall on` (владелец). Лимиты меняются на лету: `/setlimit like 50`.
+
+Premium хранится в существующей таблице `entitlements` (`feature_key = 'premium'`), покупки (Telegram Stars) — в `purchases`, идемпотентно по `charge_id`. Цены — в `PRODUCTS` (`server/bot/access.js`).
+
+## Структура
+
+```
+server/bot/
+  app.js      polling, роутинг сообщений и кнопок, регистрация анкеты
+  admin.js    админ-команды и callback-кнопки
+  access.js   FEATURES / paywall / Premium / Stars-товары
+  data.js     все SQL-запросы
+  ui.js       клавиатуры и тексты карточек
+  telegram.js обёртка над Bot API
+  util.js     парсинг даты рождения, команд, HTML-экранирование
+db/migrations/002_chat_bot.sql
+tests/bot-logic.test.js
+```
+
+## Ограничения
+
+- Фото хранятся как Telegram `file_id` (`profiles.photo_file_id`), отдельной модерации картинок нет — работают жалобы и блокировки.
+- Mini App API пока не проверяет `bot_users.is_banned`: забаненный в боте пользователь скрывается из ленты (`is_visible=false`), но API его токен не отвергает.
+- Состояния диалога хранятся в БД (`bot_users.state`), рестарт сервиса их не теряет.
